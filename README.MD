@@ -3,3 +3,5 @@
 ***
 <p>This repository is to show about Spring boot security implementation for 
 JWT BASED authentication (User-Role)</p>
+
+- The JWT token used RSA hash algorithms with key-pairs
