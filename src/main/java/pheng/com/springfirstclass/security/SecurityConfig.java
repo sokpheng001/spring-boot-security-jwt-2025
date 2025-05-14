@@ -28,6 +28,11 @@ import java.util.List;
 public class SecurityConfig {
     private final CustomUserDetailService userDetailService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    /**
+     * <p>This method used to config global cross site origin feature for spring boot</p>
+     * @return
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
