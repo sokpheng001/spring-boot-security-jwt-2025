@@ -53,6 +53,7 @@ public class JWTUtil {
     public String extractSubject(String token) {
         return getClaimsFromToken(token).getSubject();
     }
+    // extract
     public List<String> extractRoles(String token) {
         Claims claims = getClaimsFromToken(token);
         Object rolesObj = claims.get("roles");
