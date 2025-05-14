@@ -43,6 +43,12 @@ public class KeyUtil {
         this.publicKey = loadPublicKey(publicKeyPath);
     }
 
+    /**
+     * <p>Load the private key from file</p>
+     * @param location
+     * @return
+     * @throws Exception
+     */
     private PrivateKey loadPrivateKey(String location) throws Exception {
         Resource resource = resourceLoader.getResource(location);
         try (InputStream is = resource.getInputStream()) {
@@ -54,6 +60,12 @@ public class KeyUtil {
         }
     }
 
+    /**
+     * <p>Load public key from file</p>
+     * @param location
+     * @return
+     * @throws Exception
+     */
     private PublicKey loadPublicKey(String location) throws Exception {
         Resource resource = resourceLoader.getResource(location);
         try (InputStream is = resource.getInputStream()) {

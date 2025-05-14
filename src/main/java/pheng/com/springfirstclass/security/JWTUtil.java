@@ -23,6 +23,13 @@ public class JWTUtil {
     private long accessTokenExpiration;
     @Value("${jwt.refresh-token.expire}")
     private long refreshTokenExpiration;
+
+    /**
+     * Generate JWT
+     * @param subject
+     * @param authorities
+     * @return
+     */
     public String generateAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
         //create a claim
         Map<String, Object> claims = new HashMap<>();
@@ -41,6 +48,12 @@ public class JWTUtil {
                 .signWith(keyUtil.getPrivateKey(), SignatureAlgorithm.RS256)
                 .compact();
     }
+
+    /**
+     * Generate refresh token
+     * @param subject
+     * @return
+     */
     public String generateRefreshToken(String subject) {
         //
         return Jwts.builder()
@@ -50,10 +63,11 @@ public class JWTUtil {
                 .signWith(keyUtil.getPrivateKey(), SignatureAlgorithm.RS256)
                 .compact();
     }
+    // extract subject from jwt token
     public String extractSubject(String token) {
         return getClaimsFromToken(token).getSubject();
     }
-    // extract
+    // extract authority from jwt token
     public List<String> extractRoles(String token) {
         Claims claims = getClaimsFromToken(token);
         Object rolesObj = claims.get("roles");
@@ -72,9 +86,11 @@ public class JWTUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    // validate is valid access token type
     public Boolean isAccessTokenType(String token) {
         return getClaimsFromToken(token).get("roles") != null; // if has roles in payload then it's the access token :)
     }
+    // valid token by using key-pairs
     public Boolean isTokenValid(String token) {
         try{
             Jwts.parserBuilder()

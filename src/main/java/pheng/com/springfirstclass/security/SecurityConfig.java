@@ -45,7 +45,6 @@ public class SecurityConfig {
         });
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         //
-
          //
         http.httpBasic(AbstractHttpConfigurer::disable);
         return http.build();
