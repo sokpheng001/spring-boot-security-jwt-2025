@@ -1,44 +1,89 @@
 package pheng.com.springfirstclass.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class JWTUtil {
-    private static final Logger log = LoggerFactory.getLogger(JWTUtil.class);
-    @Value("${jwt.private-key:NOT_FOUND}")
-    private String privateKeyPath;
-    @Value("${jwt.public-key}")
-    private String publicKeyPath;
+    private final KeyUtil keyUtil;
     @Value("${jwt.access-token.expire}")
     private long accessTokenExpiration;
     @Value("${jwt.refresh-token.expire}")
     private long refreshTokenExpiration;
-    // Load private
-    public PrivateKey getPrivateKey() throws Exception {
-        System.out.println("privateKeyPath: " + privateKeyPath);
-        byte[] keyBytes = Files.readAllBytes(Paths.get(privateKeyPath));
-
-        String privateKeyPEM = new String(keyBytes)
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s", "");
-
-        byte[] decodedKey = Base64.getDecoder().decode(privateKeyPEM);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+    public String generateAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
+        //create a claim
+        Map<String, Object> claims = new HashMap<>();
+        List<String> roles = new ArrayList<>();
+        for (GrantedAuthority authority : authorities) {
+            roles.add(authority.getAuthority());
+        }
+        claims.put("sub", subject);
+        claims.put("roles", roles);
+        //
+        return Jwts.builder()
+                .setSubject(subject)
+                .setClaims(claims)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))// 1 hour
+                .signWith(keyUtil.getPrivateKey(), SignatureAlgorithm.RS256)
+                .compact();
+    }
+    public String generateRefreshToken(String subject) {
+        //
+        return Jwts.builder()
+                .setSubject(subject)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration)) // 30 days
+                .signWith(keyUtil.getPrivateKey(), SignatureAlgorithm.RS256)
+                .compact();
+    }
+    public String extractSubject(String token) {
+        return getClaimsFromToken(token).getSubject();
+    }
+    public List<String> extractRoles(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object rolesObj = claims.get("roles");
+        if (rolesObj instanceof List<?> rolesList) {
+            return rolesList.stream()
+                    .filter(role -> role instanceof String)
+                    .map(role -> (String) role)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+    public Claims getClaimsFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(keyUtil.getPublicKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+    public Boolean isAccessTokenType(String token) {
+        return getClaimsFromToken(token).get("roles") != null; // if has roles in payload then it's the access token :)
+    }
+    public Boolean isTokenValid(String token) {
+        try{
+            Jwts.parserBuilder()
+                    .setSigningKey(keyUtil.getPublicKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        }catch (JwtException e){
+            throw new JwtException("Invalid JWT token");
+        }
     }
 
 }

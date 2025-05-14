@@ -7,4 +7,5 @@ import pheng.com.springfirstclass.model.Role;
 
 public interface RoleRepository extends JpaRepository<Role, Integer> {
     Role findRoleByUuid(String uuid);
+    Role findRoleByName(String roleName);
 }

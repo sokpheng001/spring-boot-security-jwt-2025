@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: spring-first-class
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/postgres
+    username: postgres
+    password: "123"
+    driver-class-name: org.postgresql.Driver
+
+jwt:
+  private-key: classpath:keys/private.pem
+  public-key: classpath:keys/public.pem
+  access-token:
+    expire: 3600000 # 3600000s =  1 hour
+  refresh-token:
+    expire: 2592000000 # 2592000000s =  30 days
